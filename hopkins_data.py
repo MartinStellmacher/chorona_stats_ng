@@ -18,15 +18,8 @@ def curl_file(url, dest_path):
         open(dest_path, 'wb').write(r.content)
 
 
-def update_curl_confirmed():
-    curl_file('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv', hopkins_confirmed_path)
-
-
-def update_curl_population():
-    curl_file('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv', hopkins_confirmed_path)
-
-
 def get_confirmed_by_country():
+    curl_file('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv', hopkins_confirmed_path)
     df = pd.read_csv(hopkins_confirmed_path)
     # drop Province/State
     df = df.groupby('Country/Region').sum()
@@ -37,6 +30,7 @@ def get_confirmed_by_country():
 
 
 def get_population_by_country():
+    curl_file('https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/UID_ISO_FIPS_LookUp_Table.csv', hopkins_population_path)
     df = pd.read_csv(hopkins_population_path)
     # drop Province/State
     df = df.groupby('Country_Region').sum()
