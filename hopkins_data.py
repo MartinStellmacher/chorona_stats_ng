@@ -4,9 +4,15 @@ import pandas as pd
 import datetime
 
 # even when not using Git clone still keep the Hopkins filesystem structure
+hopkins_confirmed_name = 'time_series_covid19_confirmed_global.csv'
+hopkins_death_name = 'time_series_covid19_deaths_global.csv'
 hopkins_data_path = Path('./data/COVID-19/csse_covid_19_data')
 hopkins_time_series_path = hopkins_data_path / 'csse_covid_19_time_series'
-hopkins_confirmed_path = hopkins_time_series_path / 'time_series_covid19_confirmed_global.csv'
+hopkins_confirmed_path = hopkins_time_series_path / hopkins_confirmed_name
+hopkins_death_path = hopkins_time_series_path / hopkins_death_name
+hopkins_data_url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/'
+hopkins_confirmed_url = hopkins_data_url + hopkins_confirmed_name
+hopkins_killed_url = hopkins_data_url + hopkins_death_name
 hopkins_population_path = hopkins_data_path / 'UID_ISO_FIPS_LookUp_Table.csv'
 
 
@@ -29,13 +35,24 @@ def get_confirmed_by_country():
     return df.copy()
 
 
+def get_death_by_country():
+    curl_file('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv', hopkins_death_path)
+    df = pd.read_csv(hopkins_death_path)
+    # drop Province/State
+    df = df.groupby('Country/Region').sum()
+    # drop senseless summed Lat and Long columns
+    df = df.iloc[:, 2:]
+    # return deep copy
+    return df.copy()
+
+
 def get_population_by_country():
     curl_file('https://github.com/CSSEGISandData/COVID-19/raw/master/csse_covid_19_data/UID_ISO_FIPS_LookUp_Table.csv', hopkins_population_path)
     df = pd.read_csv(hopkins_population_path)
     # drop Province/State
-    df = df.groupby('Country_Region').sum()
+    df = df[df['Province_State'].isna()] # df.groupby('Country_Region').sum()
     # drop senseless summed Lat and Long columns
-    df = df.Population
+    df = df.set_index('Country_Region').Population
     # return deep copy
     return df.copy()
 
