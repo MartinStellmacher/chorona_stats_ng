@@ -11,6 +11,7 @@ class CovidData:
         assert len(set(self.confirmed_df.index)-set(self.population_df.index)) == 0
         self.seven_day_incidence = self.confirmed_df.diff(7, axis=1).divide(self.population_df, axis=0)*100000
         self.seven_day_death_rate = self.death_df.diff(7, axis=1).divide(self.population_df, axis=0)*100000
+        self.death_per_confirmed = 100 * self.seven_day_death_rate / self.seven_day_incidence
 
     def create_overview(self):  # todo
         df = pd.concat([
@@ -35,34 +36,31 @@ class CovidData:
         df = df.clip(lower=0)
         # stack data
         return df.stack().reset_index().rename(
-            columns={'level_0': 'Country', 'level_1': 'Date', 0: label})
+            columns={'level_0': 'Country', 'level_1': 'Date', 0: label}), label
 
-    def get_seven_day_incidences(self, countries=None):
+    def get_seven_day_incidences(self, countries, y_label):
         return CovidData.create_time_series_data(
             self.seven_day_incidence,
-            countries, 'Seven Day Incidence')
+            countries, y_label)
 
-    def get_confirmed_yesterday_100k(self, countries=None):
+    def get_confirmed_yesterday_100k(self, countries, y_label):
         return CovidData.create_time_series_data(
-            self.confirmed_df.diff(1, axis=1).divide(self.population_df, axis=0)*100000,
-            countries, 'Confirmed Yesterday / 100k')
+            self.confirmed_df.diff(1, axis=1).divide(self.population_df, axis=0)*100000, countries, y_label)
 
-    def get_death_yesterday_100k(self, countries=None):
+    def get_death_yesterday_100k(self, countries, y_label):
         return CovidData.create_time_series_data(
-            self.death_df.diff(1, axis=1).divide(self.population_df, axis=0)*100000,
-            countries, 'Death Yesterday / 100k')
+            self.death_df.diff(1, axis=1).divide(self.population_df, axis=0)*100000, countries, y_label)
 
-    def confirmed_sum_100k(self, countries):
+    def confirmed_sum_100k(self, countries, y_label):
         return CovidData.create_time_series_data(
-            self.confirmed_df.divide(self.population_df, axis=0)*100000,
-            countries, 'Confirmed Sum per 100k')
+            self.confirmed_df.divide(self.population_df, axis=0)*100000, countries, y_label)
 
-    def death_sum_100k(self, countries):
+    def death_sum_100k(self, countries, y_label):
         return CovidData.create_time_series_data(
-            self.death_df.divide(self.population_df, axis=0)*100000,
-            countries, 'Death Sum per 100k')
+            self.death_df.divide(self.population_df, axis=0)*100000, countries, y_label)
 
-    def death_rate(self, countries):
-        return CovidData.create_time_series_data(
-            self.seven_day_death_rate,
-            countries, 'Seven Day Death Rate')
+    def death_rate(self, countries, y_label):
+        return CovidData.create_time_series_data(self.seven_day_death_rate, countries, y_label)
+
+    def get_death_per_confirmed(self, countries, y_label):
+        return CovidData.create_time_series_data(self.death_per_confirmed, countries, y_label)

@@ -44,7 +44,8 @@ column_formats = {
     'weekly_death_rate': Format(precision=2, scheme=Scheme.fixed),
 }
 
-sub_graphs = ['daily-confirmed-graph', 'daily-death-graph', 'incidence-graph', 'confirmed-graph', 'death_rate-graph', 'death-graph']
+sub_graphs = ['daily-confirmed-graph', 'daily-death-graph', 'incidence-graph', 'confirmed-graph', 'death_rate-graph',
+              'death-graph', 'death_per_confirmed']
 
 app = dash.Dash(__name__)
 
@@ -69,31 +70,26 @@ app.layout = html.Div(
                         figure=go.Figure()) for sub_graph in sub_graphs])
 
 
+def create_px_line(df, column):
+    return px.line(df, x='Date', y=column, color='Country')
+
+
 @app.callback(
     *[Output(component_id=sub_graph, component_property='figure') for sub_graph in sub_graphs],
     Input(component_id='table', component_property='selected_rows')
 )
 def update_output_div(input_value):
+    selected_countries = overview_df[overview_df.index.isin(input_value)].country.to_list()
     return \
-        px.line(covid_data.get_confirmed_yesterday_100k(
-            overview_df[overview_df.index.isin(input_value)].country.to_list()),
-                   x='Date', y='Confirmed Yesterday / 100k', color='Country'), \
-        px.line(covid_data.get_death_yesterday_100k(
-            overview_df[overview_df.index.isin(input_value)].country.to_list()),
-                   x='Date', y='Death Yesterday / 100k', color='Country'), \
-        px.line(covid_data.get_seven_day_incidences(
-            overview_df[overview_df.index.isin(input_value)].country.to_list()),
-                   x='Date', y='Seven Day Incidence', color='Country'), \
-        px.line(covid_data.confirmed_sum_100k(
-            overview_df[overview_df.index.isin(input_value)].country.to_list()),
-                   x='Date', y='Confirmed Sum per 100k', color='Country'), \
-        px.line(covid_data.death_rate(
-            overview_df[overview_df.index.isin(input_value)].country.to_list()),
-                   x='Date', y='Seven Day Death Rate', color='Country'), \
-        px.line(covid_data.death_sum_100k(
-            overview_df[overview_df.index.isin(input_value)].country.to_list()),
-                   x='Date', y='Death Sum per 100k', color='Country'),
+        create_px_line(*covid_data.get_confirmed_yesterday_100k(selected_countries, 'Confirmed Yesterday / 100k')), \
+        create_px_line(*covid_data.get_death_yesterday_100k(selected_countries, 'Death Yesterday / 100k')), \
+        create_px_line(*covid_data.get_seven_day_incidences(selected_countries, 'Seven Day Incidence')), \
+        create_px_line(*covid_data.confirmed_sum_100k(selected_countries, 'Confirmed Sum per 100k')), \
+        create_px_line(*covid_data.death_rate(selected_countries, 'Seven Day Death Rate')), \
+        create_px_line(*covid_data.death_sum_100k(selected_countries, 'Death Sum per 100k')), \
+        create_px_line(*covid_data.get_death_per_confirmed(selected_countries, 'Death / Confirmed [%]'))
 # , template='plotly_dark'
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
