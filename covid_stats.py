@@ -43,6 +43,11 @@ class CovidData:
             self.seven_day_incidence,
             countries, y_label)
 
+    def get_seven_day_incidences_ranking(self, countries, y_label):
+        return CovidData.create_time_series_data(
+            self.seven_day_incidence.rank(ascending=False),
+            countries, y_label)
+
     def get_confirmed_yesterday_100k(self, countries, y_label):
         return CovidData.create_time_series_data(
             self.confirmed_df.diff(1, axis=1).divide(self.population_df, axis=0)*100000, countries, y_label)
@@ -62,5 +67,15 @@ class CovidData:
     def death_rate(self, countries, y_label):
         return CovidData.create_time_series_data(self.seven_day_death_rate, countries, y_label)
 
+    def death_rank(self, countries, y_label):
+        return CovidData.create_time_series_data(self.seven_day_death_rate.rank(ascending=False), countries, y_label)
+
     def get_death_per_confirmed(self, countries, y_label):
         return CovidData.create_time_series_data(self.death_per_confirmed, countries, y_label)
+
+    def get_death_per_confirmed_rank(self, countries, y_label):
+        return CovidData.create_time_series_data(self.death_per_confirmed.rank(ascending=False), countries, y_label)
+
+    def get_death_per_confirmed_shifted(self, countries, offset, y_label):
+        df = 100 * self.seven_day_death_rate / self.seven_day_incidence.shift(offset, axis='columns')
+        return CovidData.create_time_series_data(df.iloc[:,30+offset:], countries, y_label)

@@ -2,7 +2,7 @@ import dash
 from dash import dash_table
 from dash import html
 from dash import dcc
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from dash.dash_table.Format import Format, Scheme
 from dash.dash_table import FormatTemplate
 
@@ -44,8 +44,9 @@ column_formats = {
     'weekly_death_rate': Format(precision=2, scheme=Scheme.fixed),
 }
 
-sub_graphs = ['daily-confirmed-graph', 'daily-death-graph', 'incidence-graph', 'confirmed-graph', 'death_rate-graph',
-              'death-graph', 'death_per_confirmed']
+sub_graphs = ['daily-confirmed-graph', 'daily-death-graph', 'incidence-graph', 'incidence-rank-graph',
+              'confirmed-graph', 'death_rate-graph', 'death_rank-graph', 'death-graph', 'death_per_confirmed',
+              'death_per_confirmed_rank']
 
 app = dash.Dash(__name__)
 
@@ -65,9 +66,12 @@ app.layout = html.Div(
             filter_action="native",
             sort_action="native",
             sort_mode="single",
-        )] + [dcc.Graph(id=sub_graph, config={"displaylogo": False, "edits": {"legendPosition": True,
-                                                                              "axisTitleText": True}},
-                        figure=go.Figure()) for sub_graph in sub_graphs])
+        )] + [dcc.Graph(id=sub_graph, config={"displaylogo": False}, figure=go.Figure()) for sub_graph in sub_graphs] +
+        [html.Div(style={"margin-top": 30}),
+         dcc.Slider(id="shift_slider", min=-20, max=20, step=1, value=0, included=True,
+                    tooltip={'always_visible': True, 'placement': 'bottom'}),
+         dcc.Graph(id="death_per_confirmed_shifted", config={"displaylogo": False}, figure=go.Figure())]
+)
 
 
 def create_px_line(df, column):
@@ -76,19 +80,53 @@ def create_px_line(df, column):
 
 @app.callback(
     *[Output(component_id=sub_graph, component_property='figure') for sub_graph in sub_graphs],
+    Output(component_id="death_per_confirmed_shifted", component_property='figure'),
+    Input(component_id='shift_slider', component_property='value'),
     Input(component_id='table', component_property='selected_rows')
 )
-def update_output_div(input_value):
-    selected_countries = overview_df[overview_df.index.isin(input_value)].country.to_list()
+def update_output_div(offset, countries):
+    selected_countries = overview_df[overview_df.index.isin(countries)].country.to_list()
     return \
         create_px_line(*covid_data.get_confirmed_yesterday_100k(selected_countries, 'Confirmed Yesterday / 100k')), \
         create_px_line(*covid_data.get_death_yesterday_100k(selected_countries, 'Death Yesterday / 100k')), \
         create_px_line(*covid_data.get_seven_day_incidences(selected_countries, 'Seven Day Incidence')), \
+        create_px_line(*covid_data.get_seven_day_incidences_ranking(selected_countries, 'Seven Day Incidence Rank')), \
         create_px_line(*covid_data.confirmed_sum_100k(selected_countries, 'Confirmed Sum per 100k')), \
         create_px_line(*covid_data.death_rate(selected_countries, 'Seven Day Death Rate')), \
+        create_px_line(*covid_data.death_rank(selected_countries, 'Seven Day Death Rank')), \
         create_px_line(*covid_data.death_sum_100k(selected_countries, 'Death Sum per 100k')), \
-        create_px_line(*covid_data.get_death_per_confirmed(selected_countries, 'Death / Confirmed [%]'))
-# , template='plotly_dark'
+        create_px_line(*covid_data.get_death_per_confirmed(selected_countries, 'Death / Confirmed [%]')), \
+        create_px_line(*covid_data.get_death_per_confirmed_rank(selected_countries, 'Death / Confirmed Rank')), \
+        create_px_line(*covid_data.get_death_per_confirmed_shifted(selected_countries, offset, 'Death / Confirmed [%]'))
+
+
+# @app.callback(
+#     *[Output(component_id=sub_graph, component_property='figure') for sub_graph in sub_graphs],
+#     Input(component_id='table', component_property='selected_rows')
+# )
+# def update_output_div(input_value):
+#     print(input_value)
+#     selected_countries = overview_df[overview_df.index.isin(input_value)].country.to_list()
+#     return \
+#         create_px_line(*covid_data.get_confirmed_yesterday_100k(selected_countries, 'Confirmed Yesterday / 100k')), \
+#         create_px_line(*covid_data.get_death_yesterday_100k(selected_countries, 'Death Yesterday / 100k')), \
+#         create_px_line(*covid_data.get_seven_day_incidences(selected_countries, 'Seven Day Incidence')), \
+#         create_px_line(*covid_data.confirmed_sum_100k(selected_countries, 'Confirmed Sum per 100k')), \
+#         create_px_line(*covid_data.death_rate(selected_countries, 'Seven Day Death Rate')), \
+#         create_px_line(*covid_data.death_sum_100k(selected_countries, 'Death Sum per 100k')), \
+#         create_px_line(*covid_data.get_death_per_confirmed(selected_countries, 'Death / Confirmed [%]'))
+#
+#
+# @app.callback(
+#     Output(component_id="death_per_confirmed_shifted", component_property='figure'),
+#     Input(component_id='shift_slider', component_property='value'),
+#     State(component_id='table', component_property='selected_rows'),
+# )
+# def update_output_div2(offset, countries):
+#     print(f'countries: {countries}')
+#     print(f'offset: {offset}')
+#     selected_countries = overview_df[overview_df.index.isin(countries)].country.to_list()
+#     return create_px_line(*covid_data.get_death_per_confirmed(selected_countries, 'Death / Confirmed [%]'))  # create_px_line2(*covid_data.get_death_per_confirmed_shifted(selected_countries, offset, 'Death / Confirmed [%]'))
 
 
 if __name__ == '__main__':
