@@ -100,34 +100,5 @@ def update_output_div(offset, countries):
         create_px_line(*covid_data.get_death_per_confirmed_shifted(selected_countries, offset, 'Death / Confirmed [%]'))
 
 
-# @app.callback(
-#     *[Output(component_id=sub_graph, component_property='figure') for sub_graph in sub_graphs],
-#     Input(component_id='table', component_property='selected_rows')
-# )
-# def update_output_div(input_value):
-#     print(input_value)
-#     selected_countries = overview_df[overview_df.index.isin(input_value)].country.to_list()
-#     return \
-#         create_px_line(*covid_data.get_confirmed_yesterday_100k(selected_countries, 'Confirmed Yesterday / 100k')), \
-#         create_px_line(*covid_data.get_death_yesterday_100k(selected_countries, 'Death Yesterday / 100k')), \
-#         create_px_line(*covid_data.get_seven_day_incidences(selected_countries, 'Seven Day Incidence')), \
-#         create_px_line(*covid_data.confirmed_sum_100k(selected_countries, 'Confirmed Sum per 100k')), \
-#         create_px_line(*covid_data.death_rate(selected_countries, 'Seven Day Death Rate')), \
-#         create_px_line(*covid_data.death_sum_100k(selected_countries, 'Death Sum per 100k')), \
-#         create_px_line(*covid_data.get_death_per_confirmed(selected_countries, 'Death / Confirmed [%]'))
-#
-#
-# @app.callback(
-#     Output(component_id="death_per_confirmed_shifted", component_property='figure'),
-#     Input(component_id='shift_slider', component_property='value'),
-#     State(component_id='table', component_property='selected_rows'),
-# )
-# def update_output_div2(offset, countries):
-#     print(f'countries: {countries}')
-#     print(f'offset: {offset}')
-#     selected_countries = overview_df[overview_df.index.isin(countries)].country.to_list()
-#     return create_px_line(*covid_data.get_death_per_confirmed(selected_countries, 'Death / Confirmed [%]'))  # create_px_line2(*covid_data.get_death_per_confirmed_shifted(selected_countries, offset, 'Death / Confirmed [%]'))
-
-
 if __name__ == '__main__':
     app.run_server(debug=True)
