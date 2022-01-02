@@ -9,9 +9,9 @@ class CovidData:
         self.death_df = hopkins_data.get_death_by_country()
         self.population_df = hopkins_data.get_population_by_country()
         assert len(set(self.confirmed_df.index)-set(self.population_df.index)) == 0
-        self.seven_day_incidence = self.confirmed_df.diff(7, axis=1).divide(self.population_df, axis=0)*100000
-        self.seven_day_death_rate = self.death_df.diff(7, axis=1).divide(self.population_df, axis=0)*100000
-        self.death_per_confirmed = 100 * self.seven_day_death_rate / self.seven_day_incidence
+        self.seven_day_incidence = (self.confirmed_df.diff(7, axis=1).divide(self.population_df, axis=0)*100000).fillna(0.0)
+        self.seven_day_death_rate = (self.death_df.diff(7, axis=1).divide(self.population_df, axis=0)*100000).fillna(0.0)
+        self.death_per_confirmed = (100 * self.seven_day_death_rate / self.seven_day_incidence).fillna(0.0)
 
     def create_overview(self):  # todo
         df = pd.concat([
